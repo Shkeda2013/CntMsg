@@ -15,11 +15,11 @@ const io = new Server(server, {
   }
 });
 
-// Используем порт из переменной окружения или 6532
+// Г€Г±ГЇГ®Г«ГјГ§ГіГҐГ¬ ГЇГ®Г°ГІ ГЁГ§ ГЇГҐГ°ГҐГ¬ГҐГ­Г­Г®Г© Г®ГЄГ°ГіГ¦ГҐГ­ГЁГї ГЁГ«ГЁ 6532
 const PORT = process.env.PORT || 6532;
 const USERS_FILE = path.join(__dirname, 'users.json');
 
-// Загрузка пользователей из файла
+// Г‡Г ГЈГ°ГіГ§ГЄГ  ГЇГ®Г«ГјГ§Г®ГўГ ГІГҐГ«ГҐГ© ГЁГ§ ГґГ Г©Г«Г 
 let users = {};
 try {
     if (fs.existsSync(USERS_FILE)) {
@@ -29,12 +29,12 @@ try {
     console.error('Error loading user data:', err);
 }
 
-// Сохранение пользователей в файл
+// Г‘Г®ГµГ°Г Г­ГҐГ­ГЁГҐ ГЇГ®Г«ГјГ§Г®ГўГ ГІГҐГ«ГҐГ© Гў ГґГ Г©Г«
 function saveUsers() {
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
 }
 
-// Middleware для правильной кодировки
+// Middleware Г¤Г«Гї ГЇГ°Г ГўГЁГ«ГјГ­Г®Г© ГЄГ®Г¤ГЁГ°Г®ГўГЄГЁ
 app.use((req, res, next) => {
   res.header('Content-Type', 'text/html; charset=utf-8');
   next();
@@ -47,19 +47,19 @@ const connectedUsers = {};
 const activeTokens = {};
 const guestUsers = {};
 const groups = {};
-const userGroups = {}; // Текущие группы пользователей
+const userGroups = {}; // Г’ГҐГЄГіГ№ГЁГҐ ГЈГ°ГіГЇГЇГ» ГЇГ®Г«ГјГ§Г®ГўГ ГІГҐГ«ГҐГ©
 
-// Генерация токена
+// ГѓГҐГ­ГҐГ°Г Г¶ГЁГї ГІГ®ГЄГҐГ­Г 
 function generateToken(username) {
     const token = crypto.randomBytes(16).toString('hex');
     activeTokens[token] = {
         username,
-        expires: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 дней
+        expires: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 Г¤Г­ГҐГ©
     };
     return token;
 }
 
-// Проверка токена
+// ГЏГ°Г®ГўГҐГ°ГЄГ  ГІГ®ГЄГҐГ­Г 
 function verifyToken(token, username) {
     const tokenData = activeTokens[token];
     if (!tokenData) return false;
@@ -82,7 +82,7 @@ function decodeText(text) {
 io.on('connection', (socket) => {
     console.log('New connection:', socket.id);
     
-    // Обработка регистрации
+    // ГЋГЎГ°Г ГЎГ®ГІГЄГ  Г°ГҐГЈГЁГ±ГІГ°Г Г¶ГЁГЁ
     socket.on('register', ({ username, password }, callback) => {
         const decodedUsername = decodeText(username);
         const decodedPassword = decodeText(password);
@@ -100,7 +100,7 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
     
-    // Обработка входа
+    // ГЋГЎГ°Г ГЎГ®ГІГЄГ  ГўГµГ®Г¤Г 
     socket.on('login', ({ username, password }, callback) => {
         const decodedUsername = decodeText(username);
         const decodedPassword = decodeText(password);
@@ -118,7 +118,7 @@ io.on('connection', (socket) => {
         callback({ success: true, token });
     });
     
-    // Создание гостевого пользователя
+    // Г‘Г®Г§Г¤Г Г­ГЁГҐ ГЈГ®Г±ГІГҐГўГ®ГЈГ® ГЇГ®Г«ГјГ§Г®ГўГ ГІГҐГ«Гї
     socket.on('createGuest', ({ username }, callback) => {
         const decodedUsername = decodeText(username);
         const token = generateToken(decodedUsername);
@@ -126,17 +126,17 @@ io.on('connection', (socket) => {
         callback({ success: true, token });
     });
     
-    // Проверка токена
+    // ГЏГ°Г®ГўГҐГ°ГЄГ  ГІГ®ГЄГҐГ­Г 
     socket.on('verifyToken', ({ token, username }, callback) => {
         const isValid = verifyToken(token, username);
         callback({ success: isValid });
     });
     
-    // Установка имени
+    // Г“Г±ГІГ Г­Г®ГўГЄГ  ГЁГ¬ГҐГ­ГЁ
     socket.on('setName', (name) => {
         const userName = decodeText(name);
         connectedUsers[socket.id] = userName;
-        userGroups[userName] = null; // По умолчанию нет группы
+        userGroups[userName] = null; // ГЏГ® ГіГ¬Г®Г«Г·Г Г­ГЁГѕ Г­ГҐГІ ГЈГ°ГіГЇГЇГ»
         
         io.emit('newMessage', {
             name: 'Server',
@@ -145,7 +145,7 @@ io.on('connection', (socket) => {
         sendUserCount();
     });
 
-    // Создание группы
+    // Г‘Г®Г§Г¤Г Г­ГЁГҐ ГЈГ°ГіГЇГЇГ»
     socket.on('create_group', ({ groupName }, callback) => {
         const username = connectedUsers[socket.id];
         if (!username) return callback({ success: false, message: 'Not authorized' });
@@ -171,7 +171,7 @@ io.on('connection', (socket) => {
         io.to(socket.id).emit('update_group', decodedGroupName);
     });
 
-    // Приглашение в группу (без указания группы - в текущую)
+    // ГЏГ°ГЁГЈГ«Г ГёГҐГ­ГЁГҐ Гў ГЈГ°ГіГЇГЇГі (ГЎГҐГ§ ГіГЄГ Г§Г Г­ГЁГї ГЈГ°ГіГЇГЇГ» - Гў ГІГҐГЄГіГ№ГіГѕ)
     socket.on('invite', ({ user }, callback) => {
         const username = connectedUsers[socket.id];
         if (!username) return callback({ success: false, message: 'Not authorized' });
@@ -196,7 +196,7 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
 
-    // Вход в группу
+    // Г‚ГµГ®Г¤ Гў ГЈГ°ГіГЇГЇГі
     socket.on('join_group', ({ groupName }, callback) => {
         const username = connectedUsers[socket.id];
         if (!username) return callback({ success: false, message: 'Not authorized' });
@@ -207,14 +207,14 @@ io.on('connection', (socket) => {
             return callback({ success: false, message: 'Group not found' });
         }
 
-        // Выходим из текущей группы если есть
+        // Г‚Г»ГµГ®Г¤ГЁГ¬ ГЁГ§ ГІГҐГЄГіГ№ГҐГ© ГЈГ°ГіГЇГЇГ» ГҐГ±Г«ГЁ ГҐГ±ГІГј
         if (userGroups[username]) {
             const currentGroup = userGroups[username];
             groups[currentGroup].sockets = groups[currentGroup].sockets.filter(s => s !== socket.id);
             groups[currentGroup].users = groups[currentGroup].users.filter(u => u !== username);
         }
 
-        // Входим в новую группу
+        // Г‚ГµГ®Г¤ГЁГ¬ Гў Г­Г®ГўГіГѕ ГЈГ°ГіГЇГЇГі
         groups[decodedGroupName].users.push(username);
         groups[decodedGroupName].sockets.push(socket.id);
         userGroups[username] = decodedGroupName;
@@ -227,7 +227,7 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
 
-    // Выход из группы
+    // Г‚Г»ГµГ®Г¤ ГЁГ§ ГЈГ°ГіГЇГЇГ»
     socket.on('leave_group', (_, callback) => {
         const username = connectedUsers[socket.id];
         if (!username) return callback({ success: false, message: 'Not authorized' });
@@ -247,7 +247,7 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
 
-    // Кик пользователя
+    // ГЉГЁГЄ ГЇГ®Г«ГјГ§Г®ГўГ ГІГҐГ«Гї
     socket.on('kick_user', ({ user }, callback) => {
         const username = connectedUsers[socket.id];
         if (!username) return callback({ success: false, message: 'Not authorized' });
@@ -273,7 +273,7 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
 
-    // Отправка сообщений
+    // ГЋГІГЇГ°Г ГўГЄГ  Г±Г®Г®ГЎГ№ГҐГ­ГЁГ©
     socket.on('sendMessage', (data) => {
         if (data && data.name && data.message) {
             const username = decodeText(data.name);
@@ -282,14 +282,14 @@ io.on('connection', (socket) => {
             const groupName = userGroups[username];
             
             if (groupName && groups[groupName]) {
-                // Отправляем в группу
+                // ГЋГІГЇГ°Г ГўГ«ГїГҐГ¬ Гў ГЈГ°ГіГЇГЇГі
                 io.to(groups[groupName].sockets).emit('newMessage', {
                     name: username,
                     message,
                     group: groupName
                 });
             } else {
-                // Отправляем в общий чат
+                // ГЋГІГЇГ°Г ГўГ«ГїГҐГ¬ Гў Г®ГЎГ№ГЁГ© Г·Г ГІ
                 io.emit('newMessage', {
                     name: username,
                     message,
@@ -299,7 +299,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Личные сообщения
+    // Г‹ГЁГ·Г­Г»ГҐ Г±Г®Г®ГЎГ№ГҐГ­ГЁГї
     socket.on('privateMessage', ({ from, to, message }, callback) => {
         const decodedFrom = decodeText(from);
         const decodedTo = decodeText(to);
@@ -321,11 +321,11 @@ io.on('connection', (socket) => {
         callback({ success: true });
     });
 
-    // Отключение
+    // ГЋГІГЄГ«ГѕГ·ГҐГ­ГЁГҐ
     socket.on('disconnect', () => {
         const userName = connectedUsers[socket.id] ? decodeText(connectedUsers[socket.id]) : 'guest';
         
-        // Выходим из группы при отключении
+        // Г‚Г»ГµГ®Г¤ГЁГ¬ ГЁГ§ ГЈГ°ГіГЇГЇГ» ГЇГ°ГЁ Г®ГІГЄГ«ГѕГ·ГҐГ­ГЁГЁ
         if (userGroups[userName]) {
             const groupName = userGroups[userName];
             if (groups[groupName]) {
