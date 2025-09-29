@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta charset="UTF-8">
+    <title>CNT messages</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        .background {
+            background: linear-gradient(to right, #f5fffe,#e5ffff,#bbf7f6);
+        }
+        
+        @font-face {
+            font-family: "PrincetownSolid"; 
+            src: url("../fonts/PrincetownSolid.ttf") format("truetype"); 
+            font-style: normal; 
+            font-weight: normal; 
+        }
+        
+        .H1 {
+            font-family: "PrincetownSolid";
+            font-size: 50px;
+        }
+        
+        footer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background-color: #333;
+          color: white;
+          padding: 10px;
+          text-align: center;
+        }
+
+        .footer-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 20px;
+        }
+
+        .footer-buttons {
+          display: flex;
+          justify-content: center;
+          gap: 15px;
+          margin-bottom: 15px;
+          flex-wrap: wrap;
+        }
+
+        .footer-button {
+          color: white;
+          text-decoration: none;
+          padding: 8px 15px;
+          border-radius: 4px;
+          background-color: #555;
+          transition: background-color 0.3s;
+        }
+
+        .footer-button:hover {
+          background-color: #777;
+        }
+
+        .footer-info {
+          font-size: 14px;
+          color: #aaa;
+        }
+        
+        .user-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #0B63F6;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        
+        .content {
+            margin-top: 60px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body class="background">
+    <div class="user-info">
+        <span id="current-username"></span>
+        <button class="logout-btn" onclick="logout()">Выйти</button>
+    </div>
+    
+    <div class="content" align="center">
+        <h1 class="H1"> CNT messanger </h1>
+            
+        <h3>Главный адинистратор - Flnnd13</h3>
+        <h3>С сервером помогал - deepseek</h3>
+        <h3>С тестом помогали - Ponchiik228, Flnnd13</h3>
+        <h3>Телеграмм канал <a href="https://t.me/TESTER123ght">сайта</a></h3>
+        <h6>Version: 1.3</h6>
+    </div>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-buttons">
+          <a href="index.html" class="footer-button">Главная</a>
+          <a class="footer-button">О нас</a>
+        </div>
+        <div class="footer-info">
+          <p>© 2025 CNT message. Все права защищены.</p>
+        </div>
+      </div>
+    </footer>
+    
+    <script>
+        // Проверка авторизации при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('cnt_messager_token');
+            const username = localStorage.getItem('cnt_messager_username');
+            
+            if (!token || !username) {
+                // Если нет токена или имени пользователя, перенаправляем на страницу авторизации
+                window.location.href = 'auth.html';
+                return;
+            }
+            
+            // Устанавливаем имя пользователя в интерфейсе
+            document.getElementById('current-username').textContent = username;
+        });
+        
+        function logout() {
+            localStorage.removeItem('cnt_messager_token');
+            localStorage.removeItem('cnt_messager_username');
+            window.location.href = 'auth.html';
+        }
+    </script>
+</body>
+</html>

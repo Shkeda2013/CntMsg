@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CNT messages - Авторизация</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, blue, #d6d6d6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .auth-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 350px;
+            max-width: 90%;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            background: #eee;
+            border: none;
+        }
+        
+        .auth-tab.active {
+            background: #0B63F6;
+            color: white;
+        }
+		
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .AUTHbutton {
+            width: 100%;
+            padding: 10px;
+            background: #0B63F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .AUTHbutton:hover {
+            background: #003CC5;
+        }
+        
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        @font-face {
+            font-family: "PrincetownSolid"; 
+            src: url("../fonts/PrincetownSolid.ttf") format("truetype"); 
+            font-style: normal; 
+            font-weight: normal; 
+        }
+        
+        .H1 {
+            font-family: "PrincetownSolid";
+            font-size: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .guest-warning {
+            color: orange;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+		
+		.user-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #0B63F6;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+		
+		.Guest-btn {
+            background: #eee;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin-left: 5px;
+            cursor: pointer;
+			color: white;
+        }
+		
+		.Guest-btn:hover {
+            background: #ffee6f;
+            color: white;
+        }
+		
+    </style>
+</head>
+<body>
+	
+	<div class="user-info">
+        <button class="Guest-btn" onclick="enterAsGuest()">Гость</button>
+    </div>
+	
+    <div class="auth-container">
+        <h1 class="H1">CNT messager</h1>
+        
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="showTab('login')">Вход</button>
+            <button class="auth-tab" onclick="showTab('register')">Регистрация</button>
+        </div>
+        
+        <div id="login-form" class="auth-form active">
+            <input type="text" id="login-username" placeholder="Логин" required>
+            <input type="password" id="login-password" placeholder="Пароль" required>
+            <div id="login-error" class="error-message"></div>
+            <button class="AUTHbutton" onclick="login()">Войти</button>
+        </div>
+        
+        <div id="register-form" class="auth-form">
+            <input type="text" id="register-username" placeholder="Логин" required>
+            <input type="password" id="register-password" placeholder="Пароль" required>
+            <input type="password" id="register-confirm-password" placeholder="Повторите пароль" required>
+            <div id="register-error" class="error-message"></div>
+            <button class="AUTHbutton" onclick="register()">Зарегистрироваться</button>
+        </div>
+    </div>
+	
+    <audio id="sendSound" preload="auto">
+        <source src="/sounds/send.mp4" type="audio/mp4">
+    </audio>
+    <audio id="connectSound" preload="auto">
+        <source src="/sounds/conect.mp4" type="audio/mp4">
+    </audio>
+    <audio id="clearSound" preload="auto">
+        <source src="/sounds/Cls.mp4" type="audio/mp4">
+    </audio>
+	<audio id="ErrorSound" preload="auto">
+        <source src="/sounds/error.mp4" type="audio/mp4">
+    </audio>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+		let audioEnabled = true;
+	
+        const socket = io();
+        
+        function showTab(tabName) {
+            // Скрыть все формы
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Показать выбранную форму
+            document.getElementById(`${tabName}-form`).classList.add('active');
+            
+            // Обновить активные табы
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Активировать текущий таб
+            event.target.classList.add('active');
+
+            // Скрыть предупреждение для гостя
+            document.getElementById('guest-warning').style.display = 'none';
+        }
+		
+		function enterAsGuest() {
+
+            // Генерируем случайное число для имени гостя
+            const randomNumber = Math.floor(Math.random() * 9000) + 1000;
+            const guestUsername = `guest${randomNumber}`;
+            
+            // Создаем временный токен для гостя
+            socket.emit('createGuest', { username: guestUsername }, (response) => {
+                if (response.success) {
+                    // Сохраняем токен и имя гостя
+                    localStorage.setItem('cnt_messager_token', response.token);
+                    localStorage.setItem('cnt_messager_username', guestUsername);
+                    localStorage.setItem('cnt_messager_is_guest', 'true'); // Помечаем как гостя
+                    
+                    // Перенаправляем на главную страницу
+                    window.location.href = 'index.html';
+                } else {
+                    showError('login', response.message || 'Ошибка входа как гостя');
+                }
+            });
+        }
+
+		function playSound(soundId) {
+            if (!audioEnabled) return;
+            
+            try {
+                const sound = document.getElementById(soundId);
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(e => {
+                        console.log("Playback failed:", e);
+                    });
+                }
+            } catch (e) {
+                console.error("Sound error:", e);
+            }
+        }
+		
+        
+        function showError(form, message) {
+            const errorElement = document.getElementById(`${form}-error`);
+			playSound('ErrorSound');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        
+        function hideError(form) {
+            document.getElementById(`${form}-error`).style.display = 'none';
+        }
+        
+        function login() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            
+            if (!username || !password) {
+                showError('login', 'Заполните все поля');
+                return;
+            }
+            
+            hideError('login');
+            
+            socket.emit('login', { username, password }, (response) => {
+                if (response.success) {
+                    // Сохраняем токен в localStorage
+                    localStorage.setItem('cnt_messager_token', response.token);
+                    localStorage.setItem('cnt_messager_username', username);
+                    
+                    // Перенаправляем на главную страницу
+                    window.location.href = 'index.html';
+                } else {
+                    showError('login', response.message || 'Ошибка авторизации');
+                }
+            });
+        }
+        
+        function register() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+            const confirmPassword = document.getElementById('register-confirm-password').value.trim();
+            
+            if (!username || !password || !confirmPassword) {
+                showError('register', 'Заполните все поля');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('register', 'Пароли не совпадают');
+                return;
+            }
+            
+            if (username.length < 3 || username.length > 20) {
+                showError('register', 'Логин должен быть от 3 до 20 символов');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('register', 'Пароль должен быть не менее 6 символов');
+                return;
+            }
+            
+            hideError('register');
+            
+            socket.emit('register', { username, password }, (response) => {
+                if (response.success) {
+                    // После успешной регистрации автоматически входим
+                    socket.emit('login', { username, password }, (loginResponse) => {
+                        if (loginResponse.success) {
+                            localStorage.setItem('cnt_messager_token', loginResponse.token);
+                            localStorage.setItem('cnt_messager_username', username);
+                            window.location.href = 'index.html';
+                        } else {
+                            showError('register', 'Регистрация успешна, но вход не удался');
+                        }
+                    });
+                } else {
+                    showError('register', response.message || 'Ошибка регистрации');
+                }
+            });
+        }
+        
+        // Обработка нажатия Enter в полях ввода
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const activeTab = document.querySelector('.auth-tab.active').textContent;
+                    if (activeTab === 'Вход') {
+                        login();
+                    } else if (activeTab === 'Регистрация') {
+                        register();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
